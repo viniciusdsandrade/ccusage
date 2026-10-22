@@ -867,6 +867,7 @@ fn model_name_from_id(model_id: u64) -> String {
         1072 => "gemini-3.6-flash-medium".to_string(),
         1073 => "gemini-3.6-flash-low".to_string(),
         1417..=1419 => "gemini-4-argon".to_string(),
+        1402 => "claude-opus-5-5".to_string(),
         1050 => "gemini-3.1-flash-lite".to_string(),
         1_000.. => format!("model_placeholder_m{}", model_id - 1_000),
         _ => format!("antigravity-model-{model_id}"),
@@ -922,6 +923,7 @@ fn normalize_antigravity_model(raw: &str) -> Option<String> {
         "model_placeholder_m417" | "model_placeholder_m418" | "model_placeholder_m419" => {
             "gemini-4-argon"
         }
+        "model_placeholder_m402" => "claude-opus-5-5",
         "model_placeholder_m50" => "gemini-3.1-flash-lite",
         "model_placeholder_m26" => "claude-opus-4-6",
         "model_placeholder_m35" => "claude-sonnet-4-6",
@@ -946,6 +948,7 @@ fn normalize_antigravity_model(raw: &str) -> Option<String> {
         "gemini-3.1-pro-high" | "gemini-3.1-pro-low" => "gemini-3.1-pro",
         "gemini-3-pro-high" | "gemini-3-pro-low" => "gemini-3-pro",
         "claude 3.7 sonnet" | "claude 3.7 sonnet thinking" => "claude-3-7-sonnet",
+        "claude opus 5.5" | "claude 5.5 opus" | "claude-opus-5.5" => "claude-opus-5-5",
         "claude 3.5 sonnet" => "claude-3-5-sonnet",
         "claude 3.5 haiku" => "claude-3-5-haiku",
         "claude 3 opus" => "claude-3-opus",
@@ -1567,6 +1570,12 @@ mod tests {
                 "model_placeholder_m419",
                 "Gemini 4 Argon",
                 "gemini-4-argon",
+            ),
+            (
+                1402,
+                "model_placeholder_m402",
+                "Claude Opus 5.5 (High)",
+                "claude-opus-5-5",
             ),
             (
                 1050,
