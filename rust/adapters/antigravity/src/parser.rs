@@ -948,6 +948,7 @@ fn normalize_antigravity_model(raw: &str) -> Option<String> {
         "gemini-3.1-pro-high" | "gemini-3.1-pro-low" => "gemini-3.1-pro",
         "gemini-3-pro-high" | "gemini-3-pro-low" => "gemini-3-pro",
         "claude 3.7 sonnet" | "claude 3.7 sonnet thinking" => "claude-3-7-sonnet",
+        "claude opus 5.5" | "claude 5.5 opus" | "claude-opus-5.5" => "claude-opus-5-5",
         "claude 3.5 sonnet" => "claude-3-5-sonnet",
         "claude 3.5 haiku" => "claude-3-5-haiku",
         "claude 3 opus" => "claude-3-opus",
@@ -1569,6 +1570,12 @@ mod tests {
                 "model_placeholder_m419",
                 "Gemini 4 Argon",
                 "gemini-4-argon",
+            ),
+            (
+                1402,
+                "model_placeholder_m402",
+                "Claude Opus 5.5 (High)",
+                "claude-opus-5-5",
             ),
             (
                 1050,
