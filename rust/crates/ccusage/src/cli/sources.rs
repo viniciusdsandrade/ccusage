@@ -461,6 +461,23 @@ mod tests {
     }
 
     #[test]
+    fn applies_spaced_command_config_over_generic_report_in_unified() {
+        let config = r#"{
+            "commands": {
+                "daily": { "since": "20260101", "mode": "display" },
+                "codex daily": { "since": "20260602", "mode": "calculate" }
+            }
+        }"#;
+        let unified = unified_with_config(&["daily"], config);
+
+        assert_eq!(unified.shared.since.as_deref(), Some("20260101"));
+        assert_eq!(unified.shared.mode, CostMode::Display);
+        let codex = &unified.sources["codex"];
+        assert_eq!(codex.shared.since.as_deref(), Some("20260602"));
+        assert_eq!(codex.shared.mode, CostMode::Calculate);
+    }
+
+    #[test]
     fn resolves_sources_for_the_bare_command() {
         let unified = unified(&[]);
 
