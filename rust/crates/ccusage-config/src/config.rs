@@ -56,10 +56,11 @@ impl ConfigContext {
 
     /// The config as `ccusage <agent> <report>` reads it, for a unified report
     /// that loads `agent` as one of its sources: `<agent>.defaults`,
-    /// `<agent>.commands.<report>` and `commands.<agent>:<report>` join the
-    /// layers the unified command already applies. `None` when the file says
-    /// nothing about that agent, so the source keeps the unified options, and
-    /// for commands that already name an agent.
+    /// `<agent>.commands.<report>`, `commands."<agent> <report>"` and
+    /// `commands.<agent>:<report>` join the layers the unified command already
+    /// applies. `None` when the file says nothing about that agent, so the
+    /// source keeps the unified options, and for commands that already name an
+    /// agent.
     pub fn for_source(&self, agent: &str) -> Option<Self> {
         if self.command.agent.is_some() {
             return None;
@@ -134,12 +135,12 @@ impl ConfigContext {
             maps.push(defaults);
         }
         if let Some(commands) = object_at(root, "commands") {
-            if let Some(raw) = object_at(commands, &self.command.raw) {
-                maps.push(raw);
-            }
             if self.command.agent.is_some() {
                 if let Some(report) = object_at(commands, &self.command.report) {
                     maps.push(report);
+                }
+                if let Some(raw) = object_at(commands, &self.command.raw) {
+                    maps.push(raw);
                 }
                 if let Some(agent) = self.command.agent.as_deref() {
                     let colon_name = format!("{agent}:{}", self.command.report);
@@ -147,6 +148,8 @@ impl ConfigContext {
                         maps.push(agent_report);
                     }
                 }
+            } else if let Some(raw) = object_at(commands, &self.command.raw) {
+                maps.push(raw);
             }
         }
         if let Some(agent) = self
@@ -1125,6 +1128,53 @@ mod tests {
         assert_eq!(shared.timezone.as_deref(), Some("UTC"));
         assert!(shared.breakdown);
         assert_eq!(speed, CodexSpeed::Fast);
+    }
+
+    #[test]
+    fn space_form_command_config_takes_precedence_over_generic_report() {
+        let config = context(
+            json!({
+                "commands": {
+                    "daily": {
+                        "mode": "display",
+                        "since": "20260101"
+                    },
+                    "codex daily": {
+                        "mode": "calculate"
+                    }
+                }
+            }),
+            "codex daily",
+            Some("codex"),
+            "daily",
+        );
+        let mut shared = SharedArgs::default();
+        apply_config_to_shared(&mut shared, &config);
+        assert_eq!(shared.mode, CostMode::Calculate);
+        assert_eq!(shared.since.as_deref(), Some("20260101"));
+    }
+
+    #[test]
+    fn space_form_command_config_in_source_view_overrides_generic_report() {
+        let config = context(
+            json!({
+                "commands": {
+                    "daily": {
+                        "mode": "display"
+                    },
+                    "codex daily": {
+                        "mode": "calculate"
+                    }
+                }
+            }),
+            "daily",
+            None,
+            "daily",
+        );
+        let codex = config.for_source("codex").expect("codex source");
+        let mut shared = SharedArgs::default();
+        codex.apply_shared(&mut shared);
+        assert_eq!(shared.mode, CostMode::Calculate);
     }
 
     #[test]
