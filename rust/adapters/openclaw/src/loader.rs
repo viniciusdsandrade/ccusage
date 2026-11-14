@@ -44,7 +44,7 @@ fn load_entries_inner(
             pricing,
             &|message| debug_log(shared, message),
         ));
-        let files = collect_session_files(&root)?;
+        let files = collect_session_files(&root);
         // Read session files in parallel; the first-wins dedup runs sequentially
         // over the original file order so the surviving record per id is the
         // same as the single-threaded read.

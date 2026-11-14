@@ -1,10 +1,10 @@
 use std::{
     collections::HashSet,
-    env, fs,
+    env,
     path::{Path, PathBuf},
 };
 
-use crate::Result;
+use ccusage_adapter_common::collect_files_matching;
 
 const OPENCLAW_DIR_ENV: &str = "OPENCLAW_DIR";
 
@@ -41,35 +41,21 @@ fn existing_path_list(raw: &str) -> Vec<PathBuf> {
         .collect()
 }
 
-pub(super) fn collect_session_files(root: &Path) -> Result<Vec<PathBuf>> {
+/// Collects the session files under `root`. A directory that cannot be read is
+/// skipped, as it is for every other source, so it cannot fail the report.
+pub(super) fn collect_session_files(root: &Path) -> Vec<PathBuf> {
     let mut files = Vec::new();
-    collect_session_files_inner(root, &mut files)?;
-    files.sort();
-    Ok(files)
-}
-
-fn collect_session_files_inner(path: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
-    for entry in fs::read_dir(path)? {
-        let entry = entry?;
-        let file_type = entry.file_type()?;
-        let path = entry.path();
-        if file_type.is_symlink() {
-            continue;
-        }
-        if file_type.is_dir() {
-            collect_session_files_inner(&path, files)?;
-            continue;
-        }
-        if file_type.is_file()
-            && path
-                .file_name()
+    collect_files_matching(
+        root,
+        &|path| {
+            path.file_name()
                 .and_then(|name| name.to_str())
                 .is_some_and(is_openclaw_session_file)
-        {
-            files.push(path);
-        }
-    }
-    Ok(())
+        },
+        &mut files,
+    );
+    files.sort();
+    files
 }
 
 fn is_openclaw_session_file(name: &str) -> bool {
