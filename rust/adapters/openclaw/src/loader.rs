@@ -261,4 +261,23 @@ mod tests {
         assert_eq!(entries[0].data.message.id.as_deref(), Some("evt-sqlite"));
         assert!((entries[0].cost - 0.51).abs() < f64::EPSILON);
     }
+
+    #[cfg(unix)]
+    #[test]
+    fn skips_directories_that_cannot_be_read() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let _guard = OPENCLAW_DIR_LOCK.lock().unwrap();
+        let fixture = fs_fixture!({
+            "agents/main/sessions/abc.jsonl": r#"{"type":"message","message":{"role":"assistant","model":"gpt-5.2","usage":{"input":1,"output":1,"totalTokens":2},"timestamp":1769753935279}}"#,
+        });
+        let locked = fixture.create_dir_all("workspace/locked");
+        std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o000)).unwrap();
+
+        let entries = load_entries(&SharedArgs::default(), fixture.root().to_str(), None);
+
+        // Restore access before asserting so the fixture directory can be removed.
+        std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o755)).unwrap();
+        assert_eq!(entries.unwrap().len(), 1);
+    }
 }
